@@ -7,17 +7,41 @@ class TodoModel
 
     public function __construct()
     {
-        // Inisialisasi koneksi database PostgreSQL
+        // Koneksi database Anda tetap sama
         $this->conn = pg_connect('host=' . DB_HOST . ' port=' . DB_PORT . ' dbname=' . DB_NAME . ' user=' . DB_USER . ' password=' . DB_PASSWORD);
         if (!$this->conn) {
             die('Koneksi database gagal');
         }
     }
 
-    public function getAllTodos()
+    public function getAllTodos($filter = 'all', $search = '')
     {
+        // Query dasar dengan pengurutan berdasarkan display_order
         $query = 'SELECT * FROM todo';
-        $result = pg_query($this->conn, $query);
+        $params = [];
+        $whereClauses = [];
+
+        // Logika untuk Filter
+        if ($filter === 'finished') {
+            $whereClauses[] = 'is_finished = true';
+        } elseif ($filter === 'unfinished') {
+            $whereClauses[] = 'is_finished = false';
+        }
+
+        // Logika untuk Pencarian
+        if (!empty($search)) {
+            // Menggunakan ILIKE untuk pencarian case-insensitive di PostgreSQL
+            $whereClauses[] = '(title ILIKE $1 OR description ILIKE $1)';
+            $params[] = '%' . $search . '%';
+        }
+        
+        if (!empty($whereClauses)) {
+            $query .= ' WHERE ' . implode(' AND ', $whereClauses);
+        }
+
+        $query .= ' ORDER BY display_order ASC';
+
+        $result = pg_query_params($this->conn, $query, $params);
         $todos = [];
         if ($result && pg_num_rows($result) > 0) {
             while ($row = pg_fetch_assoc($result)) {
@@ -27,24 +51,64 @@ class TodoModel
         return $todos;
     }
 
-    public function createTodo($activity)
+    public function getTodoById($id)
     {
-        $query = 'INSERT INTO todo (activity) VALUES ($1)';
-        $result = pg_query_params($this->conn, $query, [$activity]);
+        $query = 'SELECT * FROM todo WHERE id = $1';
+        $result = pg_query_params($this->conn, $query, [$id]);
+        return pg_fetch_assoc($result);
+    }
+
+    public function createTodo($title, $description)
+    {
+        $query = 'INSERT INTO todo (title, description, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())';
+        $result = pg_query_params($this->conn, $query, [$title, $description]);
         return $result !== false;
     }
 
-    public function updateTodo($id, $activity, $status)
-    {
-        $query = 'UPDATE todo SET activity=$1, status=$2 WHERE id=$3';
-        $result = pg_query_params($this->conn, $query, [$activity, $status, $id]);
-        return $result !== false;
-    }
+    public function updateTodo($id, $title, $description, $is_finished)
+{
+    // FIX: Sederhanakan konversi boolean.
+    // Nilai $is_finished ('0' atau '1') akan otomatis dikonversi oleh driver PostgreSQL.
+    $is_finished_bool = ($is_finished == '1'); // Konversi '1' menjadi true, selain itu false
+
+    $query = 'UPDATE todo SET title=$1, description=$2, is_finished=$3, updated_at=NOW() WHERE id=$4';
+    // Kirim nilai boolean yang sudah dikonversi
+    $result = pg_query_params($this->conn, $query, [$title, $description, $is_finished_bool, $id]);
+    return $result !== false;
+}
 
     public function deleteTodo($id)
     {
         $query = 'DELETE FROM todo WHERE id=$1';
         $result = pg_query_params($this->conn, $query, [$id]);
         return $result !== false;
+    }
+
+    public function isTitleExists($title, $id = null)
+    {
+        $query = 'SELECT id FROM todo WHERE title = $1';
+        $params = [$title];
+        if ($id) {
+            $query .= ' AND id != $2';
+            $params[] = $id;
+        }
+        $result = pg_query_params($this->conn, $query, $params);
+        return pg_num_rows($result) > 0;
+    }
+
+    public function updateOrder($todoIds)
+    {
+        pg_query($this->conn, 'BEGIN'); // Mulai transaksi
+        foreach ($todoIds as $index => $id) {
+            $order = $index + 1;
+            $query = 'UPDATE todo SET display_order=$1, updated_at=NOW() WHERE id=$2';
+            $result = pg_query_params($this->conn, $query, [$order, $id]);
+            if (!$result) {
+                pg_query($this->conn, 'ROLLBACK'); // Batalkan jika ada error
+                return false;
+            }
+        }
+        pg_query($this->conn, 'COMMIT'); // Simpan jika semua berhasil
+        return true;
     }
 }
