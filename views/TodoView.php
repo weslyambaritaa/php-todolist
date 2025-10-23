@@ -43,7 +43,12 @@
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-info" onclick="showDetailModal(<?= $todo['id'] ?>)">Detail</button>
-                                <button class="btn btn-sm btn-warning" onclick="showModalEditTodo(<?= $todo['id'] ?>, '<?= htmlspecialchars(addslashes($todo['title'])) ?>', '<?= htmlspecialchars(addslashes($todo['description'])) ?>', <?= $todo['is_finished'] === 't' ? '1' : '0' ?>)">Ubah</button>
+                                <button class="btn btn-sm btn-warning" onclick="showModalEditTodo(
+                                    <?= $todo['id'] ?>, 
+                                    <?= htmlspecialchars(json_encode($todo['title']), ENT_QUOTES, 'UTF-8') ?>, 
+                                    <?= htmlspecialchars(json_encode($todo['description']), ENT_QUOTES, 'UTF-8') ?>, 
+                                    <?= $todo['is_finished'] === 't' ? '1' : '0' ?>
+                                )">Ubah</button>
                                 <button class="btn btn-sm btn-danger" onclick="showModalDeleteTodo(<?= $todo['id'] ?>, '<?= htmlspecialchars(addslashes($todo['title'])) ?>')">Hapus</button>
                             </div>
                         </li>
