@@ -66,16 +66,15 @@ class TodoModel
     }
 
     public function updateTodo($id, $title, $description, $is_finished)
-{
-    // FIX: Sederhanakan konversi boolean.
-    // Nilai $is_finished ('0' atau '1') akan otomatis dikonversi oleh driver PostgreSQL.
-    $is_finished_bool = ($is_finished == '1'); // Konversi '1' menjadi true, selain itu false
+    {
+        // FIX: Ubah '0'/'1' menjadi string 'false'/'true' agar pasti dibaca oleh PostgreSQL
+        $is_finished_sql = ($is_finished == '1') ? 'true' : 'false';
 
-    $query = 'UPDATE todo SET title=$1, description=$2, is_finished=$3, updated_at=NOW() WHERE id=$4';
-    // Kirim nilai boolean yang sudah dikonversi
-    $result = pg_query_params($this->conn, $query, [$title, $description, $is_finished_bool, $id]);
-    return $result !== false;
-}
+        $query = 'UPDATE todo SET title=$1, description=$2, is_finished=$3, updated_at=NOW() WHERE id=$4';
+        // Kirim nilai string 'true'/'false' yang sudah dikonversi
+        $result = pg_query_params($this->conn, $query, [$title, $description, $is_finished_sql, $id]);
+        return $result !== false;
+    }
 
     public function deleteTodo($id)
     {

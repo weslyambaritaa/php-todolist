@@ -37,7 +37,7 @@
                     <?php foreach ($todos as $todo): ?>
                         <li class="list-group-item d-flex justify-content-between align-items-center" data-id="<?= $todo['id'] ?>">
                             <div class="d-flex align-items-center">
-                                <span class="<?= $todo['is_finished'] === 't' ? 'text-decoration-line-through text-muted' : '' ?>">
+                                <span class="<?= ($todo['is_finished'] === 't' || $todo['is_finished'] == 1) ? 'text-decoration-line-through text-muted' : '' ?>">
                                     <?= htmlspecialchars($todo['title']) ?>
                                 </span>
                             </div>
