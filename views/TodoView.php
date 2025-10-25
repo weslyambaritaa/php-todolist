@@ -9,16 +9,7 @@
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <style>
-        .list-group-item { cursor: grab; }
-        .list-group-item:active { cursor: grabbing; }
-        .ghost-class { 
-            opacity: 0.5; 
-            background: var(--bs-primary-bg-subtle);
-            border: 1px dashed var(--bs-primary);
-        }
-    </style>
-</head>
+    </head>
 <body class="bg-body-tertiary">
 
 <div class="container">
@@ -38,6 +29,26 @@
         </div>
         <div class="card shadow-lg border-0 rounded-4 my-4">
             <div class="card-body p-4 p-md-5">
+
+                <?php
+                // --- BLOK UNTUK MENAMPILKAN ALERT ---
+                if (isset($_SESSION['error_message'])) {
+                    echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">' . 
+                         htmlspecialchars($_SESSION['error_message']) . 
+                         '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' .
+                         '</div>';
+                    unset($_SESSION['error_message']); // Hapus pesan setelah ditampilkan
+                }
+                
+                if (isset($_SESSION['success_message'])) {
+                    echo '<div class="alert alert-success alert-dismissible fade show" role="alert">' . 
+                         htmlspecialchars($_SESSION['success_message']) . 
+                         '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' .
+                         '</div>';
+                    unset($_SESSION['success_message']); // Hapus pesan setelah ditampilkan
+                }
+                // --- AKHIR BLOK ALERT ---
+                ?>
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                     <h1 class="h3 fw-bolder text-primary-emphasis mb-0">My Tasks</h1>
@@ -65,7 +76,7 @@
                     <?php if (!empty($todos)): ?>
                         <?php foreach ($todos as $todo): ?>
                             <?php
-                                $is_finished = ($todo['is_finished'] === 't');
+                                $is_finished = ($todo['is_finished'] === 't'); // PostgreSQL 't' untuk true
                                 $status_class = $is_finished ? 'text-decoration-line-through text-muted' : 'text-body-emphasis';
                                 $status_value = $is_finished ? '1' : '0';
                             ?>
@@ -147,7 +158,7 @@
                         <label for="inputEditTitle" class="form-label">Judul</label>
                         <input type="text" name="title" class="form-control rounded-pill" id="inputEditTitle" required>
                     </div>
-                     <div class="mb-3">
+                    <div class="mb-3">
                         <label for="inputEditDescription" class="form-label">Deskripsi</label>
                         <textarea name="description" class="form-control rounded-3" id="inputEditDescription" rows="3"></textarea>
                     </div>
@@ -218,7 +229,7 @@
     if (todoListEl) {
         new Sortable(todoListEl, {
             animation: 150,
-            ghostClass: 'ghost-class',
+            ghostClass: 'ghost-class', // Pastikan class ini didefinisikan di file CSS eksternal Anda
             handle: '.bi-grip-vertical',
             onEnd: function (evt) {
                 const todoIds = Array.from(todoListEl.children)
@@ -239,7 +250,7 @@
         });
     }
 
-    // --- Logika Modal (Tidak berubah) ---
+    // --- Logika Modal ---
     function showDetailModal(todoId) {
         fetch(`?page=detail&id=${todoId}`)
             .then(response => response.json())

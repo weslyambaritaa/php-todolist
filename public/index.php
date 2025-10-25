@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Pastikan session_start() ada jika Anda ingin menggunakan notifikasi error via session
 // session_start(); 
 

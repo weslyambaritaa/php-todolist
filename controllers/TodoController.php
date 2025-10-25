@@ -21,14 +21,13 @@ class TodoController
             $description = $_POST['description'];
             $todoModel = new TodoModel();
 
-            session_start(); // Mulai session untuk menyimpan pesan notifikasi
-
             // Validasi judul duplikat
             if ($todoModel->isTitleExists($title)) {
-                // Beri notifikasi error menggunakan session
+                // INI BAGIAN PENTING: Atur pesan error di session
                 $_SESSION['error_message'] = 'Judul todo "' . htmlspecialchars($title) . '" sudah ada! Gagal menambahkan.';
             } else {
                 $todoModel->createTodo($title, $description);
+                // (Opsional) Beri pesan sukses jika berhasil
                 $_SESSION['success_message'] = 'Todo berhasil ditambahkan!';
             }
         }
